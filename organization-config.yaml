@@ -1,0 +1,74 @@
+enable: true
+organizationalUnits:
+  - name: Security
+  - name: Infrastructure
+  - name: Deploy
+  - name: Sandbox
+  - name: inv
+  - name: inv/Workloads
+  - name: inv/Workloads/Non-Prod
+  - name: inv/Workloads/Non-Prod/Dev
+  - name: inv/Workloads/Non-Prod/Test
+  - name: inv/Workloads/Prod
+  - name: inv/Workloads/Prod/Stage
+  - name: inv/Workloads/Prod/Prod-Int
+  - name: inv/Workloads/Prod/Prod-Ext
+  - name: Legacy
+    ignore: true # Ignore the Legacy OU
+quarantineNewAccounts:
+  enable: true
+  scpPolicyName: Quarantine
+serviceControlPolicies:
+  - name: AcceleratorGuardrails1
+    description: >
+      Accelerator Guardrails 1
+    policy: service-control-policies/guardrails-1.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+        - Deploy
+        - Sandbox
+        - inv
+  - name: AcceleratorGuardrails2
+    description: >
+      Accelerator Guardrails 2
+    policy: service-control-policies/guardrails-2.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+        - Deploy
+        - Sandbox
+        - inv
+  - name: NetworkActions
+    description: >
+      Network Actions 
+    policy: service-control-policies/networkactions.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - inv/Workloads
+  - name: Quarantine
+    description: >
+      This SCP is used to prevent changes to new accounts until the Accelerator
+      has been executed successfully.
+      This policy will be applied upon account creation if enabled.
+    policy: service-control-policies/quarantine.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits: []
+taggingPolicies:
+  - name: TagPolicy
+    description: Organization Tagging Policy
+    policy: tagging-policies/org-tag-policy.json
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+backupPolicies: []
+#   - name: BackupPolicy
+#     description: Organization Backup Policy
+#     policy: backup-policies/org-backup-policies.json
+#     deploymentTargets:
+#       organizationalUnits:
+#         - Root

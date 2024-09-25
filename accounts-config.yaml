@@ -1,0 +1,46 @@
+mandatoryAccounts:
+  - name: Management
+    description: >-
+      The management (primary) account. Do not change the name field for this
+      mandatory account. Note, the account name key does not need to match the
+      AWS account name.
+    email: xxx@inv.com
+    organizationalUnit: Root
+    warm: false
+  - name: LogArchive
+    description: >-
+      The log archive account. Do not change the name field for this mandatory
+      account. Note, the account name key does not need to match the AWS account
+      name.
+    email: aws-log-archive@inv.com
+    organizationalUnit: Security
+    warm: false
+  - name: Audit
+    description: >-
+      The security audit account (also referred to as the audit account). Do not
+      change the name field for this mandatory account. Note, the account name
+      key does not need to match the AWS account name.
+    email: aws-audit@inv.gov
+    organizationalUnit: Security
+    warm: false
+workloadAccounts: 
+    # This is ACE External pipeline Account
+  - name: external-pipeline
+    description:  ACE External Pipeline Account
+    email: aws-externalpipeline@inv.com
+    organizationalUnit: Deploy
+    # This is Shared Services Account
+  - name: SharedServices
+    description: The SharedServices account
+    email: aws-shared-services@inv.com
+    organizationalUnit: Infrastructure
+  # This is Network Services Account
+  - name: Network
+    description: The Network account
+    email: aws-network@inv.com
+    organizationalUnit: Infrastructure
+  # This is learndev Services Account
+  - name: sandbox-learn01
+    description: The Workload Sandbox Learn Dev Account
+    email: aws-sandboxlearn01@inv.com
+    organizationalUnit: Sandbox

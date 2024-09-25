@@ -1,0 +1,152 @@
+centralSecurityServices:
+  delegatedAdminAccount: Audit
+  ebsDefaultVolumeEncryption:
+    enable: true
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+      excludedRegions:
+        - us-west-2
+  s3PublicAccessBlock:
+    enable: true
+    excludeAccounts: []
+  scpRevertChangesConfig:
+    enable: false
+  snsSubscriptions: []
+  macie:
+    enable: false
+    excludeRegions: []
+    policyFindingsPublishingFrequency: FIFTEEN_MINUTES
+    publishSensitiveDataFindings: true
+  guardduty:
+    enable: true
+    excludeRegions: []
+    s3Protection:
+      enable: true
+      excludeRegions: []
+    exportConfiguration:
+      enable: true
+      overrideExisting: false
+      destinationType: S3
+      exportFrequency: FIFTEEN_MINUTES
+  securityHub:
+    enable: true
+    regionAggregation: true
+    snsTopicName: Security
+    notificationLevel: HIGH
+    excludeRegions: []
+    standards:
+       - name: AWS Foundational Security Best Practices v1.0.0
+         # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards-fsbp-controls.html
+         enable: true
+         controlsToDisable:
+           - IAM.1
+           - EC2.10
+           - Lambda.4
+       - name: CIS AWS Foundations Benchmark v1.4.0
+         # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html
+         enable: true
+         controlsToDisable:
+           - CIS.1.17
+           - CIS.1.16
+       - name: NIST Special Publication 800-53 Revision 5
+         # https://docs.aws.amazon.com/securityhub/latest/userguide/nist-standard.html
+         enable: true
+         controlstoDisable: []
+  ssmAutomation:
+    excludeRegions: []
+    documentSets: []
+accessAnalyzer:
+  enable: false
+iamPasswordPolicy:
+  allowUsersToChangePassword: true
+  hardExpiry: false
+  requireUppercaseCharacters: true
+  requireLowercaseCharacters: true
+  requireSymbols: true
+  requireNumbers: true
+  minimumPasswordLength: 14
+  passwordReusePrevention: 24
+  maxPasswordAge: 90
+awsConfig:
+  enableConfigurationRecorder: true
+  enableDeliveryChannel: true
+  ruleSets:
+    - deploymentTargets:
+        organizationalUnits:
+          - Security
+          - Infrastructure
+          - Deploy
+          - Sandbox
+          - inv
+          - inv/Workloads
+          - inv/Workloads/Non-Prod
+          - inv/Workloads/Non-Prod/Dev
+          - inv/Workloads/Non-Prod/Test
+          - inv/Workloads/Prod
+          - inv/Workloads/Prod/Stage
+          - inv/Workloads/Prod/Prod-Int
+          - inv/Workloads/Prod/Prod-Ext
+      rules:
+        # NIST 800-53-rev5 Conformance Pack - Additional 15
+        - name: accelerator-account-part-of-organizations
+          identifier: ACCOUNT_PART_OF_ORGANIZATIONS
+        - name: accelerator-alb-waf-enabled
+          complianceResourceTypes:
+            - AWS::ElasticLoadBalancingV2::LoadBalancer
+          identifier: ALB_WAF_ENABLED
+        - name: accelerator-codebuild-project-artifact-encryption
+          complianceResourceTypes:
+            - AWS::CodeBuild::Project
+          identifier: CODEBUILD_PROJECT_ARTIFACT_ENCRYPTION
+        - name: accelerator-dynamodb-in-backup-plan
+          identifier: DYNAMODB_IN_BACKUP_PLAN
+        - name: accelerator-dynamodb-throughput-limit-check
+          identifier: DYNAMODB_THROUGHPUT_LIMIT_CHECK
+        - name: accelerator-ebs-in-backup-plan
+          identifier: EBS_IN_BACKUP_PLAN
+        - name: accelerator-ebs-optimized-instance
+          complianceResourceTypes:
+            - AWS::EC2::Instance
+          identifier: EBS_OPTIMIZED_INSTANCE
+        - name: accelerator-elbv2-acm-certificate-required
+          identifier: ELBV2_ACM_CERTIFICATE_REQUIRED
+        - name: accelerator-lambda-dlq-check
+          complianceResourceTypes:
+            - AWS::Lambda::Function
+          identifier: LAMBDA_DLQ_CHECK
+        - name: accelerator-no-unrestricted-route-to-igw
+          complianceResourceTypes:
+            - AWS::EC2::RouteTable
+          identifier: NO_UNRESTRICTED_ROUTE_TO_IGW
+        - name: accelerator-redshift-cluster-kms-enabled
+          complianceResourceTypes:
+            - AWS::Redshift::Cluster
+          identifier: REDSHIFT_CLUSTER_KMS_ENABLED
+        - name: accelerator-s3-default-encryption-kms
+          complianceResourceTypes:
+            - AWS::S3::Bucket
+          identifier: S3_DEFAULT_ENCRYPTION_KMS
+        - name: accelerator-secretsmanager-using-cmk
+          complianceResourceTypes:
+            - AWS::SecretsManager::Secret
+          identifier: SECRETSMANAGER_USING_CMK
+cloudWatch:
+  metricSets: []
+  alarmSets: []
+keyManagementService:
+  keySets:
+    - name: appEbsKey
+      alias: accelerator/custom-key/appEbsKey
+      policy: kms/applicationEbs.json
+      description: KMS Key for EBS volume encryption of applications
+      enableKeyRotation: true
+      enabled: true
+      removalPolicy: destroy
+      deploymentTargets:
+        accounts:
+          - SharedServices
+          - Network
+        # only deploy in region where application workloads are present
+        excludedRegions:
+          - us-west-2

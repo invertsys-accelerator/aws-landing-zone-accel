@@ -1,0 +1,144 @@
+providers: []
+#########################
+# Customer Managed Policy
+######################### 
+policySets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    policies:
+      - name: Default-Boundary-Policy
+        policy: iam-policies/boundary-policy.json
+  # - deploymentTargets:
+  #       organizationalUnits:
+  #           - Root
+  #       excludeAccaccounts: 
+  #           - Management
+  #   identityCenterDependency: true 
+  #   policies:
+  #       - name: invipboundary
+  #         policy: iam-policies/boundary-invip.json
+
+
+########################
+# Customer Managed Roles
+########################
+roleSets:
+  - deploymentTargets:
+      organizationalUnits: 
+         - Root
+    roles:
+      - name: EC2-Default-SSM-AD-Role
+        instanceProfile: true
+        assumedBy:
+          - type: service
+            principal: ec2.amazonaws.com
+        policies:
+          awsManaged:
+            - AmazonSSMManagedInstanceCore
+            - AmazonSSMDirectoryServiceAccess
+            - CloudWatchAgentServerPolicy
+################ 
+#Break Glass Users
+#################
+groupSets:
+  - deploymentTargets:
+      accounts:
+        - Management
+    groups:
+      - name: invAdministrators
+        policies:
+          awsManaged:
+            - AdministratorAccess
+userSets:
+  - deploymentTargets:
+      accounts:
+        - Management
+    users:
+      - username: Acebreakglass01
+        group: invAdministrators
+        boundaryPolicy: Default-Boundary-Policy
+########################
+# Identity Center Config
+########################
+identityCenter:
+ name: identityCenter1
+ delegatedAdminAccount: Audit
+ identityCenterPermissionSets:
+  - name: inv-Platform-AdministratorAccess
+    policies:
+      awsManaged:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      customerManaged: []
+      # permissionsBoundary: 
+      #   customerManagedPolicy:
+      #     name: invipboundary
+      #     path: /
+    sessionDuration: 720
+  - name: inv-App-AdministratorAccess
+    policies:
+      awsManaged:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      customerManaged: []
+      # permissionsBoundary: 
+      #   customerManagedPolicy:
+      #     name: invipboundary
+      #     path: /
+    sessionDuration: 720
+  - name: inv-Platform-ReadonlyAccess
+    policies:
+      awsManaged:
+        - arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
+      customerManaged: []
+      # inlinePolicy: iam-policies/sso-permissionset1-inline-policy.json
+      # permissionsBoundary: 
+      #   customerManagedPolicy:
+      #     name: invipboundary
+      #     path: /
+    sessionDuration: 720
+
+
+ identityCenterAssignments:
+  # This is Root Admins to loginto Management Account
+  - name: inv-root-admins-assignment
+    permissionSetName: inv-Platform-AdministratorAccess
+    principals:
+      - type: GROUP
+        name: inv-AWS-IC-Root-Admins
+    deploymentTargets:
+      accounts:
+         - Management
+  # Paltform Admins login into all accounts except manaement account
+  - name: inv-platform-admins-assignment
+    permissionSetName: inv-Platform-AdministratorAccess
+    principals:
+      - type: GROUP
+        name: inv-AWS-IC-Platform-Admins
+    deploymentTargets:
+      organizationalUnits:
+         - Root
+      excludedAccounts:
+         - Management
+  # Any user want Paltform level readonly for all accounts except management    
+  - name: inv-platform-readonly-assignment
+    permissionSetName: inv-Platform-ReadonlyAccess
+    principals:
+      - type: GROUP
+        name: inv-AWS-IC-Platform-Readonly
+    deploymentTargets:
+      organizationalUnits:
+         - Root
+      excludedAccounts:
+         - Management
+  # Providing Sandbox account full admin access to group inv-AWS-IC-Sandbox-Admins
+  - name: inv-sandbox-admins-assignment
+    permissionSetName: inv-App-AdministratorAccess
+    principals:
+      - type: GROUP
+        name: inv-AWS-IC-Sandbox-Admins
+    deploymentTargets:
+      organizationalUnits:
+         - Sandbox
+
+
+

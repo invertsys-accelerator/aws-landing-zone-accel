@@ -1,0 +1,104 @@
+{
+    "tags": {
+        "costcenter": {
+            "tag_key": {
+                "@@assign": "costcenter"
+            },
+            "tag_value": {
+                "@@assign": [ ]
+            }
+        },
+        "environment": {
+            "tag_key": {
+                "@@assign": "Environment"
+            },
+            "tag_value": {
+                "@@assign": [
+                    "production-internal",
+                    "development",
+                    "test",
+                    "staging",
+                    "production-external"
+                ]
+            }
+        },
+        "appname": {
+            "tag_key": {
+                "@@assign": "appname"
+            },
+            "tag_value": {
+                "@@assign": [ ]
+            }
+        },
+        "owner": {
+            "tag_key": {
+                "@@assign": "owner"
+            },
+            "tag_value": {
+                "@@assign": [ ]
+            }
+        },
+        "env": {
+            "tag_key": {
+                "@@assign": "env"
+            },
+            "tag_value": {
+                "@@assign": [ 
+                    "prod-int",
+                    "prod-ext",
+                    "dev",
+                    "test",
+                    "stg"
+                ]
+            }
+        },
+        "dataccess": {
+            "tag_key": {
+                "@@assign": "dataccess"
+            },
+            "tag_value": {
+                "@@assign": [
+                    "internal",
+                    "exernal"
+                 ]
+            }
+        },
+        "division": {
+            "tag_key": {
+                "@@assign": "division"
+            },
+            "tag_value": {
+                "@@assign": [ ]
+            }
+        },
+        "datapriority": {
+            "tag_key": {
+                "@@assign": "datapriority"
+            },
+            "tag_value": {
+                "@@assign": [
+                    "pii",
+                    "phi",
+                    "confidential",
+                    "restricted"
+                 ]
+            }
+        },
+        "function": {
+            "tag_key": {
+                "@@assign": "function"
+            },
+            "tag_value": {
+                "@@assign": [ ]
+            }
+        },
+        "os": {
+            "tag_key": {
+                "@@assign": "os"
+            },
+            "tag_value": {
+                "@@assign": [ ]
+            }
+        }
+    }
+}

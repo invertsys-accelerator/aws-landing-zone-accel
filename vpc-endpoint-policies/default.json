@@ -1,0 +1,15 @@
+{
+	"Statement": [
+		{
+			"Action": "*",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Resource": "*",
+			"Condition": {
+				"StringEquals": {
+				  "aws:PrincipalOrgID": "o-xxxx"
+				}
+			  }
+		}
+	]
+}

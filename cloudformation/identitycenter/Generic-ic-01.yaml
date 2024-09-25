@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creates permission sets and assignments test
+Metadata:
+  version: 1.0.0
+Parameters:
+  pInstanceArn:
+    Type: String
+    Description: 'IAM Identity center Instance ARN'
+  pAccountID:
+    Type: String
+    Description: 'Target provisoining Account ID'
+  pPrincipalType:
+    Type: String
+    Description: 'Principal Type Group|USER'
+  pPrincipalId:
+    Type: String
+    Description: 'Pricipal ID of group'
+
+Resources:
+  rPermissionSetAdmin:
+    Type: AWS::SSO::PermissionSet
+    Properties:
+      InstanceArn: !Ref pInstanceArn
+      Name: 'ace-admin-cft'
+      Description: 'HRSA Admin access'
+      SessionDuration: 'PT8H'
+      ManagedPolicies:
+      - 'arn:aws:iam::aws:policy/AdministratorAccess'
+
+  rAssignment:
+    Type: AWS::SSO::Assignment
+    Properties:
+      InstanceArn: !Ref pInstanceArn
+      PermissionSetArn: !GetAtt rPermissionSetAdmin.PermissionSetArn
+      TargetId: !Ref pAccountID
+      TargetType: 'AWS_ACCOUNT'
+      PrincipalType: !Ref pPrincipalType
+      PrincipalId: !Ref pPrincipalId
+Outputs:
+  oPermissionSetAdmin:
+    Description: Permission set Name.
+    Value: !Ref rPermissionSetAdmin

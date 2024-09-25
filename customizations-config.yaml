@@ -1,0 +1,102 @@
+customizations:
+    cloudFormationStacks: 
+    - deploymentTargets:
+        accounts:
+          - Audit
+      description: CloudFormation Stack deployed to accounts fms .
+      name: Firewallmangerstack
+      regions:
+        - us-east-1
+      runOrder: 1
+      template: cloudformation/firewallmanager/Generic-fms-01.yaml
+      parameters:
+        - name: pExceptionTagKey
+          value: 'web-acl-exception'
+        - name: pExceptionTagValue
+          value: 'true'
+      terminationProtection: false
+firewalls:
+  instances: 
+    - name: panw-firewall-a
+      launchTemplate:
+        name: firewall-panw-lt-a
+        blockDeviceMappings:
+          - deviceName: /dev/xvda
+            ebs:
+              encrypted: true
+              volumeSize: 100
+              kmsKeyId: appEbsKey
+          - deviceName: /dev/xvdb
+            ebs:
+              encrypted: true
+              volumeSize: 100
+              kmsKeyId: appEbsKey
+        iamInstanceProfile: EC2-Default-SSM-AD-Role
+        imageId: ami-09b2c331087b0d381 
+        instanceType: c5n.xlarge
+        keyPair: inv-palo-alto-kp
+        networkInterfaces:
+          - deviceIndex: 0
+            description: Primary interface
+            groups:
+              - firewall-data-sg
+            subnetId: Network-Inspection-A
+          - deviceIndex: 1
+            # associateElasticIp: true
+            description: Secondary
+            groups:
+              - firewall-mgmt-sg
+            subnetId: Network-Inspection-Mgmt-A
+        userData: appconfig/panw-userdata.sh
+        securityGroups: []
+      vpc: Network-Inspection
+      terminationProtection: true
+    - name: panw-firewall-b
+      launchTemplate:
+        name: firewall-panw-lt-b
+        blockDeviceMappings:
+          - deviceName: /dev/xvda
+            ebs:
+              encrypted: true
+              volumeSize: 100
+              kmsKeyId: appEbsKey
+          - deviceName: /dev/xvdb
+            ebs:
+              encrypted: true
+              volumeSize: 100
+              kmsKeyId: appEbsKey
+        iamInstanceProfile: EC2-Default-SSM-AD-Role
+        imageId: ami-09b2c331087b0d381 
+        instanceType: c5n.xlarge
+        keyPair: ace-palo-alto-kp
+        networkInterfaces:
+          - deviceIndex: 0
+            description: Primary interface
+            groups:
+              - firewall-data-sg
+            subnetId: Network-Inspection-B
+          - deviceIndex: 1
+            # associateElasticIp: true
+            description: Secondary
+            groups:
+              - firewall-mgmt-sg
+            subnetId: Network-Inspection-Mgmt-B
+        securityGroups: []
+        userData: appconfig/panw-userdata.sh
+      vpc: Network-Inspection
+      terminationProtection: true
+  targetGroups:
+    - name: inv-panw-gwlb-tg-01
+      port: 6081
+      protocol: GENEVE
+      type: instance
+      targets:
+        - panw-firewall-a
+        - panw-firewall-b
+      healthCheck:
+        enabled: true
+        port: 80
+        protocol: HTTP
+      attributes:
+        targetFailover: rebalance
+    

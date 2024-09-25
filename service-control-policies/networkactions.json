@@ -1,0 +1,76 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "DenyVPCActions",
+        "Effect": "Deny",
+        "Action": [
+          "ec2:AcceptTransitGatewayVpcAttachment",
+          "ec2:AcceptVpc*",
+          "ec2:AdvertiseByoipCidr",
+          "ec2:AssociateDhcpOptions",
+          "ec2:AssociateRouteTable",
+          "ec2:AssociateSubnetCidrBlock",
+          "ec2:AssociateTransitGatewayRouteTable",
+          "ec2:AssociateVpcCidrBlock",
+          "ec2:AttachVpnGateway",
+          "ec2:CreateCustomerGateway",
+          "ec2:CreateDefault*",
+          "ec2:CreateDhcpOptions",
+          "ec2:CreateRoute*",
+          "ec2:CreateSubnet",
+          "ec2:CreateTransit*",
+          "ec2:CreateVp*",
+          "ec2:DeleteCustomerGateway",
+          "ec2:DeleteDhcpOptions",
+          "ec2:DeleteNetworkAcl*",
+          "ec2:DeleteRoute*",
+          "ec2:DeleteSubnet",
+          "ec2:DeleteTransitGateway*",
+          "ec2:DeleteVp*",
+          "ec2:DetachClassicLinkVpc",
+          "ec2:DetachVpnGateway",
+          "ec2:DisableTransitGateway*",
+          "ec2:DisableVgwRoutePropagation",
+          "ec2:DisableVpcClassicLink*",
+          "ec2:DisassociateRouteTable",
+          "ec2:DisassociateSubnetCidrBlock",
+          "ec2:DisassociateTransitGateway*",
+          "ec2:DisassociateVpcCidrBlock",
+          "ec2:EnableTransitGateway*",
+          "ec2:EnableVgwRoutePropagation",
+          "ec2:EnableVpcClassicLink*",
+          "ec2:ExportTransitGatewayRoutes",
+          "ec2:ModifySubnetAttribute",
+          "ec2:ModifyTransitGateway*",
+          "ec2:ModifyVpc*",
+          "ec2:ProvisionByoipCidr",
+          "ec2:RejectTransitGateway*",
+          "ec2:RejectVpc*",
+          "ec2:ReplaceRoute*",
+          "ec2:WithdrawByoipCidr",
+          "ec2:AttachInternetGateway",
+          "ec2:DetachInternetGateway",
+          "ec2:CreateInternetGateway",
+          "ec2:DeleteInternetGateway",
+          "ec2:CreateEgressOnlyInternetGateway",
+          "ec2:DeleteEgressOnlyInternetGateway",
+          "ec2:CreateNatGateway",
+          "ec2:DeleteNatGateway",
+          "ec2:CreateNetworkAcl*"
+        ],
+        "Resource": "*",
+        "Condition": {
+          "ArnNotLike": {
+            "aws:PrincipalARN": [
+              "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+              "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+              "arn:${PARTITION}:iam::*:role/cdk-accel-*",
+              "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+              "arn:${PARTITION}:iam::*:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_inv-Platform-AdministratorAccess_*"
+            ]
+          }
+        }
+      }
+    ]
+  }

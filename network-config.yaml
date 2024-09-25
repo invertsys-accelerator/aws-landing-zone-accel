@@ -1,0 +1,1614 @@
+homeRegion: &HOME_REGION us-east-1
+disasterRecoveryRegion: &DR_REGION us-west-2
+#####################################
+# Delete default VPCs-- use this    #
+# object to delete default VPCs in  #
+# any non-excluded accounts         #
+#####################################
+defaultVpc:
+  delete: true
+  excludeAccounts: []
+########################
+# central Network Services
+# IPAM, Route53Resolver
+# DNS Query Logging
+# DNS firewall
+#######################
+centralNetworkServices:
+  delegatedAdminAccount: Network
+  ########################
+  ## IP Address Management
+  ########################
+  ipams: 
+    - name: inv-ipam-prod
+      region: *HOME_REGION
+      description: inv IPAM
+      operatingRegions:
+        - *HOME_REGION
+        - *DR_REGION
+      pools:
+        - name: &BASE_POOL global-pool
+          description: inv-global-pool
+          provisionedCidrs:
+            - 10.0.0.0/8
+        - name: inv-use1-pool
+          description: Pool for home region use1
+          locale: *HOME_REGION
+          provisionedCidrs:
+            - 10.0.0.0/10
+          sourceIpamPool: *BASE_POOL
+        - name: inv-usw2-pool 
+          description: Pool for home region usw2
+          locale: *DR_REGION
+          provisionedCidrs:
+            - 10.64.0.0/10
+          sourceIpamPool: *BASE_POOL
+        ###  USE1 Pools
+        - name: inv-use1-infra-pool
+          description: use1 Core infrastructure pool use1
+          locale: *HOME_REGION
+          provisionedCidrs:
+            - 10.1.0.0/16
+          shareTargets:
+            organizationalUnits:
+              - Infrastructure
+              - Security
+              - Deploy
+          sourceIpamPool: inv-use1-pool
+        - name: inv-use1-dev-pool
+          description: use1 Pool for dev environment
+          allocationResourceTags:
+            - key: env
+              value: dev
+          locale: *HOME_REGION
+          provisionedCidrs:
+            - 10.2.0.0/15
+          shareTargets:
+            organizationalUnits:
+              - inv/Workloads/Non-Prod/Dev
+          sourceIpamPool: inv-use1-pool
+        - name: inv-use1-test-pool
+          description: use1 Pool for test environment pool
+          allocationResourceTags:
+            - key: env
+              value: test
+          locale: *HOME_REGION
+          provisionedCidrs:
+            - 10.4.0.0/15
+          shareTargets:
+            organizationalUnits:
+              - inv/Workloads/Non-Prod/Test
+          sourceIpamPool: inv-use1-pool
+        - name: inv-use1-stage-pool
+          description: use1 Pool for stage environment pool
+          locale: *HOME_REGION
+          allocationResourceTags:
+            - key: env
+              value: stage
+          provisionedCidrs:
+            - 10.6.0.0/15
+          shareTargets:
+            organizationalUnits:
+              - inv/Workloads/Prod/Stage
+          sourceIpamPool: inv-use1-pool
+        - name: inv-use1-prod-pool
+          description: use1 Pool for prod environment
+          locale: *HOME_REGION
+          allocationResourceTags:
+            - key: env
+              value: prod
+          provisionedCidrs:
+            - 10.8.0.0/15
+          shareTargets:
+            organizationalUnits:
+              - inv/Workloads/Prod/Prod-Int
+              - inv/Workloads/Prod/Prod-Ext
+          sourceIpamPool: inv-use1-pool
+        - name: inv-use1-sandbox-pool
+          description: use1 Sandbox network pool
+          locale: *HOME_REGION
+          allocationResourceTags:
+            - key: env
+              value: sandbox
+          provisionedCidrs:
+            - 10.16.0.0/16
+          shareTargets:
+            organizationalUnits:
+              - Sandbox
+          sourceIpamPool: inv-use1-pool
+          ###  USW2 Pools
+        # - name: inv-usw2-infra-pool
+        #   description: usw2 Core network pool use1
+        #   locale: *DR_REGION
+        #   provisionedCidrs:
+        #     - 10.65.0.0/16
+        #   shareTargets:
+        #     organizationalUnits:
+        #       - Infrastructure
+        #       - Security
+        #       - Deploy
+        #   sourceIpamPool: inv-usw2-pool
+        # - name: inv-usw2-dev-pool
+        #   description: usw2 Pool for dev environment
+        #   allocationResourceTags:
+        #     - key: env
+        #       value: dev
+        #   locale: *DR_REGION
+        #   provisionedCidrs:
+        #     - 10.66.0.0/15
+        #   shareTargets:
+        #     organizationalUnits:
+        #       - inv/Workloads/Non-Prod/Dev
+        #   sourceIpamPool: inv-usw2-pool
+        # - name: inv-usw2-test-pool
+        #   description: usw2 Pool for test environment pool
+        #   allocationResourceTags:
+        #     - key: env
+        #       value: test
+        #   locale: *DR_REGION
+        #   provisionedCidrs:
+        #     - 10.68.0.0/15
+        #   shareTargets:
+        #     organizationalUnits:
+        #       - inv/Workloads/Non-Prod/Test
+        #   sourceIpamPool: inv-usw2-pool
+        # - name: inv-usw2-stage-pool
+        #   description: usw2 Pool for stage environment pool
+        #   locale: *DR_REGION
+        #   allocationResourceTags:
+        #     - key: env
+        #       value: stage
+        #   provisionedCidrs:
+        #     - 10.70.0.0/15
+        #   # shareTargets:
+        #   #   organizationalUnits:
+        #   #     - inv/Workloads/Non-Prod/Test
+        #   sourceIpamPool: inv-usw2-pool
+        # - name: inv-usw2-prod-pool
+        #   description: usw2 Pool for prod environment
+        #   locale: *HOME_REGION
+        #   allocationResourceTags:
+        #     - key: env
+        #       value: prod
+        #   provisionedCidrs:
+        #     - 10.72.0.0/15
+        #   # shareTargets:
+        #   #   organizationalUnits:
+        #   #     - inv/Workloads/Non-Prod/Test
+        #   sourceIpamPool: inv-usw2-pool
+        # - name: inv-usw2-sandbox-pool
+        #   description: usw2 Sandbox network pool
+        #   locale: *DR_REGION
+        #   allocationResourceTags:
+        #     - key: env
+        #       value: sandbox
+        #   provisionedCidrs:
+        #     - 10.90.0.0/16
+        #   shareTargets:
+        #     organizationalUnits:
+        #       - Sandbox
+        #   sourceIpamPool: inv-usw2-pool
+  ###########################
+  #AWS Gateway Load Balancers
+  ###########################       
+  gatewayLoadBalancers: 
+    - name: inv-gwlb
+      subnets:
+        - Network-Inspection-A
+        - Network-Inspection-B
+      vpc: Network-Inspection
+      deletionProtection: true
+      targetGroup: inv-panw-gwlb-tg-01
+      endpoints:
+        - name: Endpoint-A
+          account: Network
+          subnet: Network-Inspection-A
+          vpc: Network-Inspection
+        - name: Endpoint-B
+          account: Network
+          subnet: Network-Inspection-B
+          vpc: Network-Inspection
+  ############
+  # Route 53 
+  ##############
+  route53Resolver:
+    rules: []
+      # - name: system-amazonaws-com
+      #   ruleType: SYSTEM
+      #   domainName: "amazonaws.com"
+      #   shareTargets:
+      #     organizationalUnits:
+      #         - Security
+      #         - Infrastructure
+      #         - Sandbox
+      #         - Deploy
+      #         - inv/Workloads
+      #         - inv/Workloads/Non-Prod
+      #         - inv/Workloads/Non-Prod/Dev
+      #         - inv/Workloads/Non-Prod/Test
+      #         - inv/Workloads/Prod
+      #         - inv/Workloads/Prod/Stage
+      #         - inv/Workloads/Prod/Prod-Int
+      #         - inv/Workloads/Prod/Prod-Ext
+    endpoints:
+      - name: inv-lza-inbound
+        type: INBOUND
+        vpc: Network-Endpoints
+        allowedCidrs:
+          - 10.0.0.0/8
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+      - name: inv-lza-outbound
+        type: OUTBOUND
+        vpc: Network-Endpoints
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+        rules:
+          # - name: inv-cisa-dot-rule
+          #   domainName: .
+          #   ruleType: FORWARD
+          #   targetIps:
+          #     - ip: 1.1.1.1 # modify this
+          #     - ip: 8.8.8.8 # modify this
+          #   shareTargets:
+          #     organizationalUnits:
+          #       - Security
+          #       - Infrastructure
+          #       - Sandbox
+          #       - Deploy
+          #       - inv/Workloads
+          #       - inv/Workloads/Non-Prod
+          #       - inv/Workloads/Non-Prod/Dev
+          #       - inv/Workloads/Non-Prod/Test
+          #       - inv/Workloads/Prod
+          #       - inv/Workloads/Prod/Stage
+          #       - inv/Workloads/Prod/Prod-Int
+          #       - inv/Workloads/Prod/Prod-Ext
+          - name: inbound-target-rule
+            domainName: aws.inv.local
+            ruleType: FORWARD
+            inboundEndpointTarget: inv-lza-inbound # This endpoint must be listed in the configuration before the outbound endpoint
+            shareTargets:
+              organizationalUnits:
+                  - Security
+                  - Infrastructure
+                  - Deploy
+                  - Sandbox
+                  - inv/Workloads
+                  - inv/Workloads/Non-Prod
+                  - inv/Workloads/Non-Prod/Dev
+                  - inv/Workloads/Non-Prod/Test
+                  - inv/Workloads/Prod
+                  - inv/Workloads/Prod/Stage
+                  - inv/Workloads/Prod/Prod-Int
+                  - inv/Workloads/Prod/Prod-Ext
+    queryLogs:
+      name: inv-lza-query-logs
+      destinations:
+        - cloud-watch-logs
+      shareTargets:
+        organizationalUnits:
+          - Security
+          - Infrastructure
+          - Deploy
+          - Sandbox
+          - inv/Workloads/Non-Prod/Dev
+          - inv/Workloads/Non-Prod/Test
+          - inv/Workloads/Prod/Stage
+          - inv/Workloads/Prod/Prod-Int
+          - inv/Workloads/Prod/Prod-Ext
+    firewallRuleGroups:
+      - name: inv-lza-block-group
+        regions:
+          - *HOME_REGION
+        rules:
+          - name: nxdomain-block-rule
+            action: BLOCK
+            customDomainList: dns-firewall-domain-lists/domain-list-1.txt
+            priority: 100
+            blockResponse: NXDOMAIN
+          - name: override-block-rule
+            action: BLOCK
+            customDomainList: dns-firewall-domain-lists/domain-list-2.txt
+            priority: 200
+            blockResponse: OVERRIDE
+            blockOverrideDomain: amazon.com
+            blockOverrideTtl: 3600
+          - name: managed-rule-BotnetCommandControl
+            action: BLOCK
+            managedDomainList: AWSManagedDomainsBotnetCommandandControl
+            priority: 300
+            blockResponse: NODATA
+          - name: managed-rule-MalwareDomainList
+            action: BLOCK
+            managedDomainList: AWSManagedDomainsMalwareDomainList
+            priority: 400
+            blockResponse: NODATA
+        shareTargets:
+          organizationalUnits:
+            - Security
+            - Infrastructure
+            - Deploy
+            - Sandbox
+            - inv/Workloads/Non-Prod/Dev
+            - inv/Workloads/Non-Prod/Test
+            - inv/Workloads/Prod/Stage
+            - inv/Workloads/Prod/Prod-Int
+            - inv/Workloads/Prod/Prod-Ext
+
+#####################################
+# Transit Gateways-- use this object #
+# to deploy transit gateways         #
+#####################################
+transitGateways: 
+  - name: inv-Network-TGW-use1-Prod
+    account: Network
+    region: *HOME_REGION
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+        - Sandbox
+        - Deploy
+        - inv/Workloads
+    asn: 65521
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    routeTables:
+      - name: inv-Network-TGW-Prod-use1-Hub
+        routes: 
+          - destinationCidrBlock: 0.0.0.0/0
+            attachment:
+              vpcName: Network-Inspection
+              account: Network
+      - name: inv-Network-TGW-Dev-use1-Spoke
+        routes: 
+          - destinationCidrBlock: 0.0.0.0/0
+            attachment:
+              vpcName: Network-Inspection
+              account: Network
+      - name: inv-Network-TGW-Test-use1-Spoke
+        routes: 
+          - destinationCidrBlock: 0.0.0.0/0
+            attachment:
+              vpcName: Network-Inspection
+              account: Network
+      - name: inv-Network-TGW-Sandbox-use1-Spoke
+        routes: 
+          - destinationCidrBlock: 0.0.0.0/0
+            attachment:
+              vpcName: Network-Inspection
+              account: Network
+      - name: inv-Network-TGW-Stage-use1-Spoke
+        routes: 
+          - destinationCidrBlock: 0.0.0.0/0
+            attachment:
+              vpcName: Network-Inspection
+              account: Network
+      - name: inv-Network-TGW-Prod-use1-Spoke
+        routes: 
+          - destinationCidrBlock: 0.0.0.0/0
+            attachment:
+              vpcName: Network-Inspection
+              account: Network
+  # - name: inv-Network-TGW-usw2-Prod
+  #   account: Network
+  #   region: *DR_REGION
+  #   shareTargets:
+  #     organizationalUnits:
+  #       - Infrastructure
+  #       - Sandbox
+  #       - Deploy
+  #       - inv/Workloads
+  #   asn: 65522
+  #   dnsSupport: enable
+  #   vpnEcmpSupport: enable
+  #   defaultRouteTableAssociation: disable
+  #   defaultRouteTablePropagation: disable
+  #   autoAcceptSharingAttachments: enable
+  #   routeTables:
+  #     - name: inv-Network-TGW-Prod-usw2-Hub
+  #       routes: []
+  #     - name: inv-Network-TGW-Dev-usw2-Spoke
+  #       routes: []
+  #     - name: inv-Network-TGW-Test-usw2-Spoke
+  #       routes: []
+  #     - name: inv-Network-TGW-Sandbox-usw2-Spoke
+  #       routes: []
+  #     - name: inv-Network-TGW-Stage-usw2-Spoke
+  #       routes: []
+  #     - name: inv-Network-TGW-Prod-usw2-Spoke
+  #       routes: []
+
+###################################
+## Site to Site VPN from TGW to WAS ZS(Primary Hub, Prod Spoke and Non-prod Spoke)
+## Site to Site VPN from TGW to CHI ZS(Secondary)
+###################################
+
+customerGateways:
+  - name: inv-aws-was-zs-cgw
+    account: Network
+    region: *HOME_REGION
+    ipAddress: xx.xx.xx # Specify the IP address for your customer gateway device's external interface Washington
+    asn: 65002 # ASN of csutomer device
+    vpnConnections:
+      - name: inv-aws-was-zs-vpn-prod-spoke # Region1 Tunnel
+        transitGateway: inv-Network-TGW-use1-Prod
+        routeTableAssociations:
+          - inv-Network-TGW-Prod-use1-Hub
+        routeTablePropagations:
+          - inv-Network-TGW-Prod-use1-Spoke
+        staticRoutesOnly: true
+        enableVpnAcceleration: false
+        tunnelSpecifications:
+          - tunnelInsideCidr: 0.0.0/30 # Inside tunnel CIDR
+            preSharedKey: test
+            logging:
+              enable: true
+            dpdTimeoutAction: restart
+            dpdTimeoutSeconds: 30
+            ikeVersions: [2]
+            phase1:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            phase2:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            startupAction: start
+            rekeyMarginTimeSeconds: 540
+          - tunnelInsideCidr: 0.0.0.0/30 #Inside tunnel CIDR
+            preSharedKey: test
+            logging:
+              enable: true
+            dpdTimeoutAction: restart
+            dpdTimeoutSeconds: 30
+            ikeVersions: [2]
+            phase1:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            phase2:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            startupAction: start
+            rekeyMarginTimeSeconds: 540
+      - name: inv-aws-was-zs-vpn-prod-hub # region1 Tunnel 2
+        transitGateway: inv-Network-TGW-use1-Prod
+        routeTableAssociations:
+          - inv-Network-TGW-Prod-use1-Hub
+        routeTablePropagations:
+          - inv-Network-TGW-Prod-use1-Spoke
+        staticRoutesOnly: true
+        enableVpnAcceleration: false
+        tunnelSpecifications:
+          - tunnelInsideCidr: 0.0.0.0/30 # Inside tunnel CIDR
+            preSharedKey: test
+            logging:
+              enable: true
+            dpdTimeoutAction: restart
+            dpdTimeoutSeconds: 30
+            ikeVersions: [2]
+            phase1:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            phase2:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            startupAction: start
+            rekeyMarginTimeSeconds: 540
+          - tunnelInsideCidr: 0.0.0.0/30 #Inside tunnel CIDR
+            preSharedKey: awszswastunnel02-NeCkgH
+            logging:
+              enable: true
+            dpdTimeoutAction: restart
+            dpdTimeoutSeconds: 30
+            ikeVersions: [2]
+            phase1:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            phase2:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            startupAction: start
+            rekeyMarginTimeSeconds: 540
+      - name: inv-aws-was-zs-vpn-non-prod-spoke # Washington Tunnel
+        transitGateway: inv-Network-TGW-use1-Prod
+        routeTableAssociations:
+          - inv-Network-TGW-Prod-use1-Hub
+        routeTablePropagations:
+          - inv-Network-TGW-Dev-use1-Spoke
+          - inv-Network-TGW-Test-use1-Spoke
+        staticRoutesOnly: true
+        enableVpnAcceleration: false
+        tunnelSpecifications:
+          - tunnelInsideCidr: 0.0.0.0/30 # Inside tunnel CIDR
+            preSharedKey: test
+            logging:
+              enable: true
+            dpdTimeoutAction: restart
+            dpdTimeoutSeconds: 30
+            ikeVersions: [2]
+            phase1:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            phase2:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            startupAction: start
+            rekeyMarginTimeSeconds: 540
+          - tunnelInsideCidr: 0.0.0.0/30 #Inside tunnel CIDR
+            preSharedKey: test
+            logging:
+              enable: true
+            dpdTimeoutAction: restart
+            dpdTimeoutSeconds: 30
+            ikeVersions: [2]
+            phase1:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            phase2:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            startupAction: start
+            rekeyMarginTimeSeconds: 540
+  - name: inv-aws-chi-zs-cgw
+    account: Network
+    region: *HOME_REGION
+    ipAddress: 1.1.1.1 # Specify the IP address for your customer gateway device's external interface Chicago
+    asn: 65003 # ASN of csutomer device
+    vpnConnections:
+      - name: inv-aws-chi-zs-vpn-backup # region2 backup Tunnel
+        transitGateway: inv-Network-TGW-use1-Prod
+        routeTableAssociations:
+          - inv-Network-TGW-Prod-use1-Hub
+        routeTablePropagations:
+          - inv-Network-TGW-Prod-use1-Hub
+          - inv-Network-TGW-Dev-use1-Hub
+          - inv-Network-TGW-Test-use1-Hub
+        staticRoutesOnly: true
+        enableVpnAcceleration: false
+        tunnelSpecifications:
+          - tunnelInsideCidr: xxxx.xxx.xx # Inside tunnel CIDR
+            preSharedKey: test
+            logging:
+              enable: true
+            dpdTimeoutAction: restart
+            dpdTimeoutSeconds: 30
+            ikeVersions: [2]
+            phase1:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            phase2:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            startupAction: start
+            rekeyMarginTimeSeconds: 540
+          - tunnelInsideCidr: xxxxx.xxx #Inside tunnel CIDR
+            preSharedKey: test
+            logging:
+              enable: true
+            dpdTimeoutAction: restart
+            dpdTimeoutSeconds: 30
+            ikeVersions: [2]
+            phase1:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            phase2:
+              dhGroups: [14]
+              encryptionAlgorithms: [AES256]
+              integrityAlgorithms: [SHA2-256]
+            startupAction: start
+            rekeyMarginTimeSeconds: 540
+
+#####################################
+# Endpoint policies -- use this     #
+# object to define standard policies #
+# for VPC endpoints                 #
+#####################################
+endpointPolicies: 
+  - name: Default
+    document: vpc-endpoint-policies/default.json
+  - name: DefaultGateway
+    document: vpc-endpoint-policies/defaultgateway.json
+  - name: Ec2
+    document: vpc-endpoint-policies/ec2.json
+vpcs: 
+##################################################
+# Central Network Endpoints VPC in Network Account
+##################################################
+  - name: Network-Endpoints
+    account: Network
+    region: *HOME_REGION
+    ipamAllocations:
+      - ipamPoolName: inv-use1-infra-pool
+        netmaskLength: 22
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    defaultSecurityGroupRulesDeletion: true
+    routeTables:
+      - name: Network-Endpoints-Tgw-A
+        routes: []
+      - name: Network-Endpoints-Tgw-B
+        routes: []
+      - name: Network-Endpoints-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Network-Endpoints-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+    subnets:
+      - name: Network-Endpoints-A
+        availabilityZone: a
+        routeTable: Network-Endpoints-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 24
+      - name: Network-Endpoints-B
+        availabilityZone: b
+        routeTable: Network-Endpoints-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 24
+      - name: Network-EndpointsTgwAttach-A
+        availabilityZone: a
+        routeTable: Network-Endpoints-Tgw-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 28
+      - name: Network-EndpointsTgwAttach-B
+        availabilityZone: b
+        routeTable: Network-Endpoints-Tgw-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 28
+    transitGatewayAttachments:
+      - name: Network-Endpoints
+        transitGateway:
+          name: inv-Network-TGW-use1-Prod
+          account: Network
+        routeTableAssociations:
+          - inv-Network-TGW-Prod-use1-Hub
+        routeTablePropagations:
+          - inv-Network-TGW-Prod-use1-Hub
+          - inv-Network-TGW-Dev-use1-Spoke
+          - inv-Network-TGW-Test-use1-Spoke
+          - inv-Network-TGW-Stage-use1-Spoke
+          - inv-Network-TGW-Sandbox-use1-Spoke
+          - inv-Network-TGW-Prod-use1-Spoke
+        subnets:
+          - Network-EndpointsTgwAttach-A
+          - Network-EndpointsTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: DefaultGateway
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    interfinvEndpoints:
+      central: true
+      defaultPolicy: Default
+      subnets:
+        - Network-Endpoints-A
+        - Network-Endpoints-B
+      endpoints:
+        - service: ec2
+        - service: ec2messages
+        - service: ssm
+        - service: ssmmessages
+        - service: kms
+        - service: logs
+        - service: monitoring
+        - service: sts
+        # - service: ecr.api
+        # - service: ecr.dkr
+        # - service: elasticloadbalancing
+        # - service: rds
+        # - service: sagemaker.api
+        # - service: sagemaker.runtime
+        # - service: notebook
+        # - service: events
+        # - service: cloudformation
+        # - service: secretsmanager
+        # - service: bedrock
+        #   applyPolicy: false
+        # - service: bedrock-ainvt 
+        #   applyPolicy: false # Remove IAM policy apply to endpoints
+        # - service: bedrock-ainvt-runtime
+        #   applyPolicy: false
+        # - service: bedrock-runtime
+        #   applyPolicy: false
+        #- service: athena
+        # - service: access-analyzer
+        # - service: application-autoscaling
+        # - service: appmesh-envoy-management
+        # - service: autoscaling
+        # - service: autoscaling-plans
+        # - service: clouddirectory
+        # - service: cloudtrail
+        # - service: codebuild
+        # - service: codecommit
+        # - service: codepipeline
+        # - service: config
+        # - service: datasync
+        # - service: ecs
+        # - service: ecs-ainvt
+        # - service: ecs-telemetry
+        # - service: elasticfilesystem
+        # - service: elasticmapreduce
+        # - service: events
+        # - service: execute-api
+        # - service: git-codecommit
+        # - service: glue
+        # - service: kinesis-streams
+        # - service: servicecatalog
+        # - service: sms
+        # - service: sns
+        # - service: sqs
+        # - service: storagegateway
+        # - service: transfer
+        # - service: workspinvs
+        # - service: awsconnector
+        # - service: kinesis-firehose
+        # - service: states
+        # - service: acm-pca
+        # - service: cassandra
+        # - service: ebs
+        # - service: elasticbeanstalk
+        # - service: elasticbeanstalk-health
+        # - service: email-smtp
+        # - service: license-manager
+        # - service: macie2
+        # - service: synthetics
+        # - service: transfer.server
+    queryLogs:
+      - hrsa-lza-query-logs
+    resolverRules: []
+      # - hrsa-cisa-dot-rule
+      # - system-amazonaws-com
+    dnsFirewallRuleGroups:
+      - name: hrsa-lza-block-group
+        priority: 101
+    tags:
+      - key: env
+        value: prod
+      - key: owner
+        value: network
+  #########################
+  # Shared Services VPC
+  #########################
+  - name: SharedServices-Main
+    account: SharedServices
+    region: *HOME_REGION
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    defaultSecurityGroupRulesDeletion: true
+    ipamAllocations:
+      - ipamPoolName: inv-use1-infra-pool
+        netmaskLength: 22
+    routeTables:
+      - name: SharedServices-Tgw-A
+        routes: []
+      - name: SharedServices-Tgw-B
+        routes: []
+      - name: SharedServices-FrontEnd-A
+        routes: []
+      - name: SharedServices-FrontEnd-B
+        routes: []
+      - name: SharedServices-Compute-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: SharedServices-Compute-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: SharedServices-Data-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: SharedServices-Data-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+    subnets:
+      - name: SharedServices-FrontEnd-A
+        availabilityZone: a
+        routeTable: SharedServices-FrontEnd-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 26
+      - name: SharedServices-FrontEnd-B
+        availabilityZone: b
+        routeTable: SharedServices-FrontEnd-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 26
+      - name: SharedServices-Compute-A
+        availabilityZone: a
+        routeTable: SharedServices-Compute-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 24
+      - name: SharedServices-Compute-B
+        availabilityZone: b
+        routeTable: SharedServices-Compute-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 24
+      - name: SharedServices-Data-A
+        availabilityZone: a
+        routeTable: SharedServices-Data-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 25
+      - name: SharedServices-Data-B
+        availabilityZone: b
+        routeTable: SharedServices-Data-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 25
+      - name: SharedServices-MainTgwAttach-A
+        availabilityZone: a
+        routeTable: SharedServices-Tgw-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 28
+      - name: SharedServices-MainTgwAttach-B
+        availabilityZone: b
+        routeTable: SharedServices-Tgw-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 28
+    transitGatewayAttachments:
+      - name: SharedServices-Main
+        transitGateway:
+          name: inv-Network-TGW-use1-Prod
+          account: Network
+        routeTableAssociations:
+          - inv-Network-TGW-Prod-use1-Hub
+        routeTablePropagations:
+          - inv-Network-TGW-Prod-use1-Hub
+          - inv-Network-TGW-Dev-use1-Spoke
+          - inv-Network-TGW-Test-use1-Spoke
+          - inv-Network-TGW-Stage-use1-Spoke
+          - inv-Network-TGW-Sandbox-use1-Spoke
+          - inv-Network-TGW-Prod-use1-Spoke
+        subnets:
+          - SharedServices-MainTgwAttach-A
+          - SharedServices-MainTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: DefaultGateway
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: true
+    queryLogs:
+      - inv-lza-query-logs
+    resolverRules:
+      # - inv-cisa-dot-rule
+      # - system-amazonaws-com
+      - inbound-target-rule
+    dnsFirewallRuleGroups:
+      - name: inv-lza-block-group
+        priority: 101
+    tags:
+      - key: env
+        value: prod
+      - key: owner
+        value: sharedservices
+      - key: project
+        value: inv
+########################
+### Egress VPC
+########################
+  - name: Network-Inspection
+    account: Network
+    region: *HOME_REGION
+    ipamAllocations:
+      - ipamPoolName: inv-use1-infra-pool
+        netmaskLength: 22
+    internetGateway: true
+    natGateways:
+      - name: inv-nat-gw-a-01
+        subnet: Network-Inspection-Public-A
+      - name: inv-nat-gw-b-01
+        subnet: Network-Inspection-Public-B
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-Inspection-Tgw-A
+        routes: 
+          - name: GwlbRoute
+            destination: 0.0.0.0/0
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-A
+      - name: Network-Inspection-Tgw-B
+        routes: 
+          - name: GwlbRoute
+            destination: 10.0.0.0/8
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-B
+      - name: Network-Inspection-Mgmt-A
+        routes: 
+          - name: NatRoute1
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: inv-nat-gw-a-01
+      - name: Network-Inspection-Mgmt-B
+        routes:
+          - name: NatRoute1
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: inv-nat-gw-b-01
+      - name: Network-Inspection-A
+        routes:
+          - name: TgwRoute1
+            destination: 10.0.0.0/8
+            type: transitGateway
+            target:  inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: NatRoute1
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: inv-nat-gw-a-01
+      - name: Network-Inspection-B
+        routes:
+          - name: TgwRoute1
+            destination: 10.0.0.0/8
+            type: transitGateway
+            target:  inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: NatRoute1
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: inv-nat-gw-b-01
+      - name: Network-Inspection-Public-A
+        routes:
+          - name: GwlbRoute
+            destination: 10.0.0.0/8
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-A
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+      - name: Network-Inspection-Public-B
+        routes:
+          - name: GwlbRoute
+            destination: 10.0.0.0/8
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-B
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+    subnets:
+      - name: Network-Inspection-Mgmt-A
+        availabilityZone: a
+        routeTable: Network-Inspection-Mgmt-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 28
+      - name: Network-Inspection-Mgmt-B
+        availabilityZone: b
+        routeTable: Network-Inspection-Mgmt-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 28
+      - name: Network-Inspection-A
+        availabilityZone: a
+        routeTable: Network-Inspection-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 24
+      - name: Network-Inspection-B
+        availabilityZone: b
+        routeTable: Network-Inspection-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 24
+      - name: Network-InspectionTgwAttach-A
+        availabilityZone: a
+        routeTable: Network-Inspection-Tgw-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 28
+      - name: Network-InspectionTgwAttach-B
+        availabilityZone: b
+        routeTable: Network-Inspection-Tgw-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 28
+      - name: Network-Inspection-Public-A
+        availabilityZone: a
+        routeTable: Network-Inspection-Public-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 28
+      - name: Network-Inspection-Public-B
+        availabilityZone: b
+        routeTable: Network-Inspection-Public-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-infra-pool
+          netmaskLength: 28
+    transitGatewayAttachments:
+      - name: Network-Inspection
+        transitGateway:
+          name: inv-Network-TGW-use1-Prod
+          account: Network
+        options:
+          applianceModeSupport: enable
+        routeTableAssociations:
+          - inv-Network-TGW-Prod-use1-Hub
+        routeTablePropagations:
+          - inv-Network-TGW-Prod-use1-Hub
+        subnets:
+          - Network-InspectionTgwAttach-A
+          - Network-InspectionTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: DefaultGateway
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: true
+    queryLogs:
+      - inv-lza-query-logs
+    resolverRules:
+      # - inv-cisa-dot-rule
+      # - system-amazonaws-com
+      - inbound-target-rule
+    dnsFirewallRuleGroups:
+      - name: inv-lza-block-group
+        priority: 101
+    securityGroups:
+      - name: firewall-mgmt-sg
+        description: Firewall Management security group
+        inboundRules:
+          - description: Remote access security group rule
+            types:
+              - SSH
+              - HTTPS
+            sources:
+              - 10.0.0.0/8
+          - description: Allow PING rule
+            types:
+              - ICMP
+            fromPort: -1
+            toPort: -1
+            sources:
+              - 10.0.0.0/8
+        outboundRules:
+          - description: Allow all outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+      - name: firewall-data-sg
+        description: Firewall Management security group
+        inboundRules:
+          - description: Remote access security group rule
+            types:
+              - HTTP
+            sources:
+              - 10.0.0.0/8
+          - description: invEVE
+            udpPorts:
+              - 6081
+            sources:
+              - 10.0.0.0/8
+        outboundRules:
+          - description: Allow all outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
+    tags:
+      - key: env
+        value: prod
+      - key: owner
+        value: network
+      - key: division
+        value: esd
+      - key: appname
+        value: inv
+######################################
+### VPC Templates  - These will be used
+# Standard VPC Subnets /28 TGW, /24 compute
+# /25 for Data /26 for Front end
+# Sandbox, Dev, Test and Prod Template
+######################################
+vpcTemplates:
+  - name: inv-use1-sbx-vpc-01
+    region: *HOME_REGION
+    deploymentTargets:
+      organizationalUnits:
+        - Sandbox
+    ipamAllocations:
+      - ipamPoolName: inv-use1-sandbox-pool
+        netmaskLength: 22
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    defaultSecurityGroupRulesDeletion: true
+    routeTables:
+      - name: inv-use1-sbx-vpc-01-Tgw-A
+        routes: []
+      - name: inv-use1-sbx-vpc-01-Tgw-B
+        routes: []
+      - name: inv-use1-sbx-vpc-01-FrontEnd-A
+        routes: []
+      - name: inv-use1-sbx-vpc-01-FrontEnd-B
+        routes: []
+      - name: inv-use1-sbx-vpc-01-Compute-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: inv-use1-sbx-vpc-01-Compute-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: inv-use1-sbx-vpc-01-Data-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: inv-use1-sbx-vpc-01-Data-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+    subnets:
+      - name: inv-use1-sbx-vpc-01-FrontEnd-A
+        availabilityZone: a
+        routeTable: inv-use1-sbx-vpc-01-FrontEnd-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 26
+      - name: inv-use1-sbx-vpc-01-FrontEnd-B
+        availabilityZone: b
+        routeTable: inv-use1-sbx-vpc-01-FrontEnd-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 26
+      - name: inv-use1-sbx-vpc-01-Compute-A
+        availabilityZone: a
+        routeTable: inv-use1-sbx-vpc-01-Compute-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 24
+      - name: inv-use1-sbx-vpc-01-Compute-B
+        availabilityZone: b
+        routeTable: inv-use1-sbx-vpc-01-Compute-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 24
+      - name: inv-use1-sbx-vpc-01-Data-A
+        availabilityZone: a
+        routeTable: inv-use1-sbx-vpc-01-Data-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 25
+      - name: inv-use1-sbx-vpc-01-Data-B
+        availabilityZone: b
+        routeTable: inv-use1-sbx-vpc-01-Data-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 25
+      - name: inv-use1-sbx-vpc-01-TgwAttach-A
+        availabilityZone: a
+        routeTable: inv-use1-sbx-vpc-01-Tgw-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 28
+      - name: inv-use1-sbx-vpc-01-TgwAttach-B
+        availabilityZone: b
+        routeTable: inv-use1-sbx-vpc-01-Tgw-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 28
+    transitGatewayAttachments:
+      - name: inv-use1-sbx-vpc-01-TGW
+        transitGateway:
+          name: inv-Network-TGW-use1-Prod
+          account: Network
+        routeTableAssociations:
+          - inv-Network-TGW-Sandbox-use1-Spoke
+        routeTablePropagations:
+          - inv-Network-TGW-Prod-use1-Hub
+          - inv-Network-TGW-Sandbox-use1-Spoke
+        subnets:
+          - inv-use1-sbx-vpc-01-TgwAttach-A
+          - inv-use1-sbx-vpc-01-TgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: DefaultGateway
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: true
+    queryLogs:
+      - inv-lza-query-logs
+    resolverRules:
+      # - inv-cisa-dot-rule
+      # - system-amazonaws-com
+      - inbound-target-rule
+    dnsFirewallRuleGroups:
+      - name: inv-lza-block-group
+        priority: 101
+    securityGroups:
+      - name: inv-internet-sg
+        description: Common Internet security group
+        inboundRules:
+          - description: Port 443 Inbound
+            types:
+              - HTTPS
+            sources:
+              - 0.0.0.0/0
+        outboundRules:
+          - description: Port 443 Outbound
+            types:
+              - HTTPS
+            sources:
+              - 0.0.0.0/0
+
+    tags:
+      - key: env
+        value: sandbox
+      - key: owner
+        value: sandbox
+      - key: project
+        value: inv
+  - name: inv-use1-sbx-vpc-02
+    region: *HOME_REGION
+    deploymentTargets:
+      accounts:
+        - sandbox-learn01
+    ipamAllocations:
+      - ipamPoolName: inv-use1-sandbox-pool
+        netmaskLength: 22
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    defaultSecurityGroupRulesDeletion: true
+    routeTables:
+      - name: inv-use1-sbx-vpc-02-Tgw-A
+        routes: []
+      - name: inv-use1-sbx-vpc-02-Tgw-B
+        routes: []
+      - name: inv-use1-sbx-vpc-02-FrontEnd-A
+        routes: []
+      - name: inv-use1-sbx-vpc-02-FrontEnd-B
+        routes: []
+      - name: inv-use1-sbx-vpc-02-Compute-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: inv-use1-sbx-vpc-02-Compute-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: inv-use1-sbx-vpc-02-Data-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: inv-use1-sbx-vpc-02-Data-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: inv-Network-TGW-use1-Prod
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+    subnets:
+      - name: inv-use1-sbx-vpc-02-FrontEnd-A
+        availabilityZone: a
+        routeTable: inv-use1-sbx-vpc-02-FrontEnd-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 26
+      - name: inv-use1-sbx-vpc-02-FrontEnd-B
+        availabilityZone: b
+        routeTable: inv-use1-sbx-vpc-02-FrontEnd-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 26
+      - name: inv-use1-sbx-vpc-02-Compute-A
+        availabilityZone: a
+        routeTable: inv-use1-sbx-vpc-02-Compute-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 24
+      - name: inv-use1-sbx-vpc-02-Compute-B
+        availabilityZone: b
+        routeTable: inv-use1-sbx-vpc-02-Compute-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 24
+      - name: inv-use1-sbx-vpc-02-Data-A
+        availabilityZone: a
+        routeTable: inv-use1-sbx-vpc-02-Data-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 25
+      - name: inv-use1-sbx-vpc-02-Data-B
+        availabilityZone: b
+        routeTable: inv-use1-sbx-vpc-02-Data-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 25
+      - name: inv-use1-sbx-vpc-02-TgwAttach-A
+        availabilityZone: a
+        routeTable: inv-use1-sbx-vpc-02-Tgw-A
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 28
+      - name: inv-use1-sbx-vpc-02-TgwAttach-B
+        availabilityZone: b
+        routeTable: inv-use1-sbx-vpc-02-Tgw-B
+        ipamAllocation:
+          ipamPoolName: inv-use1-sandbox-pool
+          netmaskLength: 28
+    transitGatewayAttachments:
+      - name: inv-use1-sbx-vpc-02-TGW
+        transitGateway:
+          name: inv-Network-TGW-use1-Prod
+          account: Network
+        routeTableAssociations:
+          - inv-Network-TGW-Sandbox-use1-Spoke
+        routeTablePropagations:
+          - inv-Network-TGW-Prod-use1-Hub
+          - inv-Network-TGW-Sandbox-use1-Spoke
+        subnets:
+          - inv-use1-sbx-vpc-01-TgwAttach-A
+          - inv-use1-sbx-vpc-01-TgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: DefaultGateway
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: true
+    queryLogs:
+      - inv-lza-query-logs
+    resolverRules:
+      # - inv-cisa-dot-rule
+      # - system-amazonaws-com
+      - inbound-target-rule
+    dnsFirewallRuleGroups:
+      - name: inv-lza-block-group
+        priority: 101
+    securityGroups:
+      - name: inv-internet-sg-02
+        description: Common Internet security group
+        inboundRules:
+          - description: Port 443 Inbound
+            types:
+              - HTTPS
+            sources:
+              - 0.0.0.0/0
+        outboundRules:
+          - description: Port 443 Outbound
+            types:
+              - HTTPS
+            sources:
+              - 0.0.0.0/0
+
+    tags:
+      - key: env
+        value: sandbox
+      - key: division
+        value: esd
+      - key: appname
+        value: inv
+
+##############################################################
+# Global configuration for VPC flow logs                     #
+# Where there is no flow log configuration defined with VPC  #
+# this configuration will be used for flow log configuration #
+##############################################################
+vpcFlowLogs:
+  trafficType: ALL
+  maxAggregationInterval: 600
+  destinations:
+    - cloud-watch-logs
+  destinationsConfig:
+    cloudWatchLogs:
+      retentionInDays: 180
+  defaultFormat: false
+  customFields:
+    - version
+    - account-id
+    - interface-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - action
+    - log-status
+    - vpc-id
+    - subnet-id
+    - instance-id
+    - tcp-flags
+    - type
+    - pkt-srcaddr
+    - pkt-dstaddr
+    - region
+    - az-id
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+    - flow-direction
+    - traffic-path
+
+#####################################
+# Prefix lists -- use this object to #
+# deploy prefix lists to be used for #
+# security groups, subnet routes,   #
+# and/or TGW static routes          #
+#####################################
+# prefixLists:
+#   - name: accelerator-prefix-list
+#     accounts:
+#       - Network
+#     regions:
+#       - *HOME_REGION
+#     addressFamily: 'IPv4'
+#     maxEntries: 1
+#     entries:
+#       - 10.1.0.1/32

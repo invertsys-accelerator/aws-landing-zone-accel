@@ -1,0 +1,5 @@
+[
+  { "logGroupPattern": "/AWSAccelerator-SecurityHub", "s3Prefix": "security-hub" },
+  {"logGroupPattern":"AWSAccelerator-NetworkVpcStack-*", "s3Prefix":"vpc-flowlogs"},
+  {"logGroupPattern":"AWSAccelerator-NetworkPrepStack-*-us-east-1-QueryLogsLogGroup*", "s3Prefix":"dns-querylogs"}
+]
