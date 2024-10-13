@@ -1,11 +1,3 @@
-# aws-landing-zone-accel
-Invertsys prescriptive aws platform design and deployment configuration files repository
-
-# Invertsys Platform Architecture diagram
-
-![](./img/onvertsys-lza-arch.jpg)
-
-# Problem Statement
 
 Federal and commercial customers want to develop applications on AWS, but they lack the ability to create AWS accounts and apply network and security foundations to those accounts in accordance with AWS Well-Architected best practices. Invertsys will help deploy the AWS platform using AWS's open-source offering, AWS Landing Zone Accelerator (LZA), within three months, following AWS best practices. We can then migrate an application into the LZA and hand it over to the customer operations team
 
