@@ -34,7 +34,7 @@ firewalls:
         iamInstanceProfile: EC2-Default-SSM-AD-Role
         imageId: ami-09b2c331087b0d381 
         instanceType: c5n.xlarge
-        keyPair: inv-palo-alto-kp
+        keyPair: inv-dummy-kp
         networkInterfaces:
           - deviceIndex: 0
             description: Primary interface
@@ -68,7 +68,7 @@ firewalls:
         iamInstanceProfile: EC2-Default-SSM-AD-Role
         imageId: ami-09b2c331087b0d381 
         instanceType: c5n.xlarge
-        keyPair: ace-palo-alto-kp
+        keyPair: inv-dummy-kp
         networkInterfaces:
           - deviceIndex: 0
             description: Primary interface

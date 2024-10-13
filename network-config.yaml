@@ -430,11 +430,11 @@ transitGateways:
 ###################################
 
 customerGateways:
-  - name: inv-aws-was-zs-cgw
+  - name: inv-aws-ind-zs-cgw
     account: Network
     region: *HOME_REGION
-    ipAddress: xx.xx.xx # Specify the IP address for your customer gateway device's external interface Washington
-    asn: 65002 # ASN of csutomer device
+    ipAddress: xx.xx.xx # Specify the IP address for your customer gateway device's external interface region
+    asn: xxxx # ASN of csutomer device
     vpnConnections:
       - name: inv-aws-was-zs-vpn-prod-spoke # Region1 Tunnel
         transitGateway: inv-Network-TGW-use1-Prod
@@ -479,7 +479,7 @@ customerGateways:
               integrityAlgorithms: [SHA2-256]
             startupAction: start
             rekeyMarginTimeSeconds: 540
-      - name: inv-aws-was-zs-vpn-prod-hub # region1 Tunnel 2
+      - name: inv-aws-ind2-zs-vpn-prod-hub # region1 Tunnel 2
         transitGateway: inv-Network-TGW-use1-Prod
         routeTableAssociations:
           - inv-Network-TGW-Prod-use1-Hub
@@ -506,7 +506,7 @@ customerGateways:
             startupAction: start
             rekeyMarginTimeSeconds: 540
           - tunnelInsideCidr: 0.0.0.0/30 #Inside tunnel CIDR
-            preSharedKey: awszswastunnel02-NeCkgH
+            preSharedKey: test
             logging:
               enable: true
             dpdTimeoutAction: restart
@@ -522,7 +522,7 @@ customerGateways:
               integrityAlgorithms: [SHA2-256]
             startupAction: start
             rekeyMarginTimeSeconds: 540
-      - name: inv-aws-was-zs-vpn-non-prod-spoke # Washington Tunnel
+      - name: inv-aws-ind-zs-vpn-non-prod-spoke # Washington Tunnel
         transitGateway: inv-Network-TGW-use1-Prod
         routeTableAssociations:
           - inv-Network-TGW-Prod-use1-Hub
@@ -566,7 +566,7 @@ customerGateways:
               integrityAlgorithms: [SHA2-256]
             startupAction: start
             rekeyMarginTimeSeconds: 540
-  - name: inv-aws-chi-zs-cgw
+  - name: inv-aws-ind2-zs-cgw
     account: Network
     region: *HOME_REGION
     ipAddress: 1.1.1.1 # Specify the IP address for your customer gateway device's external interface Chicago
@@ -798,12 +798,12 @@ vpcs:
         # - service: synthetics
         # - service: transfer.server
     queryLogs:
-      - hrsa-lza-query-logs
+      - inv-lza-query-logs
     resolverRules: []
-      # - hrsa-cisa-dot-rule
+      # - inv-cisa-dot-rule
       # - system-amazonaws-com
     dnsFirewallRuleGroups:
-      - name: hrsa-lza-block-group
+      - name: inv-lza-block-group
         priority: 101
     tags:
       - key: env
